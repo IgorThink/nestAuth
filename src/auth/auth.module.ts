@@ -7,6 +7,8 @@ import { UsersService } from 'src/users/users.service';
 import { UsersModule } from 'src/users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/users.entity';
+import { LocalStrategy } from './strategies/local-strategy';
+import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @Module({
   imports: [
@@ -19,6 +21,6 @@ import { User } from 'src/users/entities/users.entity';
     UsersModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, UsersService],
+  providers: [AuthService, UsersService, LocalStrategy, LocalAuthGuard, Jw],
 })
 export class AuthModule {}

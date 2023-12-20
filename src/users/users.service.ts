@@ -18,7 +18,7 @@ export class UsersService {
   }
 
   async findBy(
-    data: Partial<{ username: string; password: string; email: string }>,
+    data: Partial<{ username?: string; password?: string; email?: string }>,
   ) {
     return await this.UsersRepository.findOneBy(data);
   }
