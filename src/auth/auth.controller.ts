@@ -11,7 +11,7 @@ export class AuthController {
   @Patch('/login')
   async logIn(@Body() data) {
     const res = await this.authService.logIn(data);
-    delete res.password;
+    // delete res.password;
     return res;
   }
 

@@ -11,9 +11,14 @@ export class AuthService {
   ) {}
 
   async validate({ email, username, password }) {
-    const user = username
-      ? await this.userService.findBy({ username })
-      : await this.userService.findBy({ email });
+    let user: any = {};
+    if (username) {
+      user = await this.userService.findBy({ username });
+    } else if (email) {
+      user = await this.userService.findBy({ email });
+    } else {
+      return null;
+    }
     if (user && password === user.password) {
       const { password, ...result } = user;
       return result;
@@ -24,22 +29,23 @@ export class AuthService {
   async logIn(data: IUser) {
     const user = await this.validate(data);
     if (user) {
-      const payload = { sub: data.id, username: data.username };
+      const payload = { sub: user.id, username: user.username };
       const token = {
         access_token: await this.jwtService.signAsync(payload),
         refreshToken: await this.jwtService.signAsync(payload, {
           expiresIn: '7d',
         }),
       };
-      return { ...data, token };
+
+      return { ...user, token };
     } else {
       throw new BadRequestException('Invalid credentials');
     }
   }
 
   async addUser(user: any): Promise<any> {
-    const result = this.validate(user);
-    if (result && user.password && user.email && user.username) {
+    const result = await this.validate(user);
+    if (!result && user.password && (user.email || user.username)) {
       try {
         const newUser = await this.userService.create(user);
         this.userService.save(newUser);
