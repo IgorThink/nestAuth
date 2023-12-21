@@ -1,4 +1,5 @@
 import { Characters } from 'src/charaters/entities/characters.entity';
+import { ICharacters } from 'src/dto/ICharacters';
 import {
   Column,
   CreateDateColumn,
@@ -22,8 +23,8 @@ export class User {
   @Column()
   password: string;
 
-  // @OneToMany(() => Characters, (character) => character.users)
-  // favoriteCharacters: Characters[];
+  @Column({ type: 'json', default: [], array: true, nullable: true })
+  favoriteCharacters: ICharacters[];
 
   @CreateDateColumn()
   createdAt: Date;

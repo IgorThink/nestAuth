@@ -1,8 +1,7 @@
-import { Body, Controller, Patch, Put, Request, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Patch, Post, Put, UseGuards } from '@nestjs/common';
 import { IAuthUser } from 'src/dto/IAuthUser';
 import { AuthService } from './auth.service';
-import { Response } from 'express';
-import { LocalAuthGuard } from './guards/local-auth.guard';
+import { RefreshJwtGuard } from './guards/refresh-jwt.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -11,7 +10,6 @@ export class AuthController {
   // @UseGuards(LocalAuthGuard)
   @Patch('/login')
   async logIn(@Body() data) {
-    console.log('asdasd', data);
     const res = await this.authService.logIn(data);
     delete res.password;
     return res;
@@ -20,5 +18,11 @@ export class AuthController {
   @Put('/register')
   singUp(@Body() data: IAuthUser) {
     return this.authService.addUser(data);
+  }
+
+  @UseGuards(RefreshJwtGuard)
+  @Post('refresh')
+  async refrshToken(@Body() data) {
+    return this.authService.refreshToken(data);
   }
 }

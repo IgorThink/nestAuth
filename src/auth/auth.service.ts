@@ -1,46 +1,46 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { IAuthUser } from 'src/dto/IAuthUser';
 import { UsersService } from 'src/users/users.service';
-import { Response } from 'express';
-import * as bcrypt from 'bcrypt';
 import { IUser } from 'src/dto/IUser';
 
 @Injectable()
 export class AuthService {
   constructor(
-    // @InjectRepository() userRepository: Repository<User>,
     private userService: UsersService,
     private jwtService: JwtService,
   ) {}
 
   async validate({ email, username, password }) {
-    console.log(email, username, password);
     const user = username
       ? await this.userService.findBy({ username })
       : await this.userService.findBy({ email });
     if (user && password === user.password) {
       const { password, ...result } = user;
-      console.log('data', result);
       return result;
     }
     return null;
   }
 
   async logIn(data: IUser) {
-    console.log(data);
-    const payload = { sub: data.id, username: data.username };
-    const token = {
-      access_token: await this.jwtService.signAsync(payload),
-    };
-    return { ...data, token };
+    const user = await this.validate(data);
+    if (user) {
+      const payload = { sub: data.id, username: data.username };
+      const token = {
+        access_token: await this.jwtService.signAsync(payload),
+        refreshToken: await this.jwtService.signAsync(payload, {
+          expiresIn: '7d',
+        }),
+      };
+      return { ...data, token };
+    } else {
+      throw new BadRequestException('Invalid credentials');
+    }
   }
 
   async addUser(user: any): Promise<any> {
     const result = this.validate(user);
     if (result && user.password && user.email && user.username) {
       try {
-        console.log('user', user);
         const newUser = await this.userService.create(user);
         this.userService.save(newUser);
         const payload = { sub: user.id, username: user.username };
@@ -53,5 +53,18 @@ export class AuthService {
     } else {
       return 'User with this data already exists';
     }
+  }
+
+  async refreshToken(user: IUser) {
+    const payload = {
+      username: user.email,
+      sub: {
+        username: user.username,
+      },
+    };
+
+    return {
+      accessToken: this.jwtService.sign(payload),
+    };
   }
 }

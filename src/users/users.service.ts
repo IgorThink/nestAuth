@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/users.entity';
+import { ICharacters } from 'src/dto/ICharacters';
 
 @Injectable()
 export class UsersService {
@@ -31,6 +32,29 @@ export class UsersService {
   async save(data: any) {
     const result = await this.UsersRepository.save(data);
     return result;
+  }
+
+  async getUserCharacters({ username }): Promise<ICharacters[]> {
+    const user = await this.UsersRepository.findOneBy({ username });
+    return user.favoriteCharacters;
+  }
+
+  async addUserCharacter({ username, characters }) {
+    const user = await this.UsersRepository.findOneBy({
+      username,
+    });
+    user.favoriteCharacters.push(characters);
+    return await this.UsersRepository.save(user);
+  }
+
+  async deleteUserCharacter({ username, characters }) {
+    const user = await this.UsersRepository.findOneBy({
+      username,
+    });
+    user.favoriteCharacters = user.favoriteCharacters.filter(
+      (character) => character.id !== characters.id,
+    );
+    return await this.UsersRepository.save(user);
   }
 
   async deleteUser(id: number): Promise<string> {
